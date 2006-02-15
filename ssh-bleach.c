@@ -49,7 +49,7 @@ char *get_quoted_arg (char *line)
     for (old = first; old < last; old++) {
 	if (*old == '\\')
 	    continue;
-	*n++ = *old++;
+	*n++ = *old;
     }
     *n++ = '\0';
     printf ("First argument is \"%s\"\n", new);
