@@ -21,9 +21,12 @@
 #include <stdlib.h>
 #include <string.h>
 
+int verbose = 0;
+
 int cvs_server (char *line) {
     if (!strcmp (line, "cvs server")) {
-	printf ("cvs server\n");
+	if (verbose)
+	    printf ("cvs server\n");
 	return execl ("/usr/bin/cvs", "cvs", "server", NULL);
     }
     return 0;
@@ -52,7 +55,8 @@ char *get_quoted_arg (char *line)
 	*n++ = *old;
     }
     *n++ = '\0';
-    printf ("First argument is \"%s\"\n", new);
+    if (verbose)
+	printf ("First argument is \"%s\"\n", new);
     return new;
 }
 
@@ -62,7 +66,8 @@ int git_receive_pack (char *line) {
     if (!strncmp (line, "git-receive-pack '", 18) && 
 	(arg = get_quoted_arg (line)))
     {
-	printf ("git-receive-pack '%s'\n", arg);
+	if (verbose)
+	    printf ("git-receive-pack '%s'\n", arg);
 	return execl ("/usr/local/bin/git-receive-pack", 
 		      "git-receive-pack",
 		      arg,
@@ -77,7 +82,8 @@ int git_upload_pack (char *line) {
     if (!strncmp (line, "git-upload-pack '", 17) && 
 	(arg = get_quoted_arg (line)))
     {
-	printf ("git-upload-pack '%s'\n", arg);
+	if (verbose)
+	    printf ("git-upload-pack '%s'\n", arg);
 	return execl ("/usr/local/bin/git-upload-pack", 
 		      "git-upload-pack",
 		      arg,
@@ -98,6 +104,8 @@ int main (int argc, char **argv)
     char    *line = getenv ("SSH_ORIGINAL_COMMAND");
     int	    i;
     
+    if (argv[1] && !strcmp (argv[1], "-v"))
+	verbose = 1;
     if (!line)
 	return 1;
     for (i = 0; commands[i]; i++)
