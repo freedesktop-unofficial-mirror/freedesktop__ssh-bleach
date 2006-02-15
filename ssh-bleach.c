@@ -22,8 +22,10 @@
 #include <string.h>
 
 int cvs_server (char *line) {
-    if (!strcmp (line, "cvs server"))
+    if (!strcmp (line, "cvs server")) {
+	printf ("cvs server\n");
 	return execl ("/usr/bin/cvs", "cvs", "server", NULL);
+    }
     return 0;
 }
 
@@ -50,6 +52,7 @@ char *get_quoted_arg (char *line)
 	*n++ = *old++;
     }
     *n++ = '\0';
+    printf ("First argument is \"%s\"\n", new);
     return new;
 }
 
@@ -59,6 +62,7 @@ int git_receive_pack (char *line) {
     if (!strncmp (line, "git-receive-pack '", 18) && 
 	(arg = get_quoted_arg (line)))
     {
+	printf ("git-receive-pack '%s'\n", arg);
 	return execl ("/usr/local/bin/git-receive-pack", 
 		      "git-receive-pack",
 		      arg,
@@ -73,6 +77,7 @@ int git_upload_pack (char *line) {
     if (!strncmp (line, "git-upload-pack '", 17) && 
 	(arg = get_quoted_arg (line)))
     {
+	printf ("git-upload-pack '%s'\n", arg);
 	return execl ("/usr/local/bin/git-upload-pack", 
 		      "git-upload-pack",
 		      arg,
