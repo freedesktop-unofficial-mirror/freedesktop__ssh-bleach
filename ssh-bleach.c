@@ -61,7 +61,7 @@ char *get_quoted_arg (char *line)
 int git_receive_pack (char *line) {
     char *arg = get_quoted_arg (line);
     if (! arg)
-	return 0;
+	return -1;
 
     if (verbose)
 	printf ("git-receive-pack '%s'\n", arg);
@@ -74,7 +74,7 @@ int git_receive_pack (char *line) {
 int git_upload_pack (char *line) {
     char *arg = get_quoted_arg (line);
     if (! arg)
-	return 0;
+	return -1;
 
     if (verbose)
 	printf ("git-upload-pack '%s'\n", arg);
