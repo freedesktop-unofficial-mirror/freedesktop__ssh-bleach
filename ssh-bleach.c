@@ -25,12 +25,9 @@
 int verbose = 0;
 
 int cvs_server (char *line) {
-    if (!strcmp (line, "cvs server")) {
-	if (verbose)
-	    printf ("cvs server\n");
-	return execl ("/usr/bin/cvs", "cvs", "server", NULL);
-    }
-    return 0;
+    if (verbose)
+	printf ("cvs server\n");
+    return execl ("/usr/bin/cvs", "cvs", "server", NULL);
 }
 
 char *get_quoted_arg (char *line)
@@ -62,42 +59,39 @@ char *get_quoted_arg (char *line)
 }
 
 int git_receive_pack (char *line) {
-    char *arg;
-    
-    if (!strncmp (line, "git-receive-pack '", 18) && 
-	(arg = get_quoted_arg (line)))
-    {
-	if (verbose)
-	    printf ("git-receive-pack '%s'\n", arg);
-	return execl ("/usr/local/bin/git-receive-pack", 
-		      "git-receive-pack",
-		      arg,
-		      NULL);
-    }
-    return 0;
+    char *arg = get_quoted_arg (line);
+    if (! arg)
+	return 0;
+
+    if (verbose)
+	printf ("git-receive-pack '%s'\n", arg);
+    return execl ("/usr/local/bin/git-receive-pack", 
+		  "git-receive-pack",
+		  arg,
+		  NULL);
 }
 
 int git_upload_pack (char *line) {
-    char *arg;
-    
-    if (!strncmp (line, "git-upload-pack '", 17) && 
-	(arg = get_quoted_arg (line)))
-    {
-	if (verbose)
-	    printf ("git-upload-pack '%s'\n", arg);
-	return execl ("/usr/local/bin/git-upload-pack", 
-		      "git-upload-pack",
-		      arg,
-		      NULL);
-    }
-    return 0;
+    char *arg = get_quoted_arg (line);
+    if (! arg)
+	return 0;
+
+    if (verbose)
+	printf ("git-upload-pack '%s'\n", arg);
+    return execl ("/usr/local/bin/git-upload-pack", 
+		  "git-upload-pack",
+		  arg,
+		  NULL);
 }
 
-int (*commands[]) (char *line) = {
-    cvs_server,
-    git_receive_pack,
-    git_upload_pack,
-    NULL
+struct {
+    char *name;
+    int (*command) (char *line);
+} commands[] = {
+    { "cvs server", cvs_server },
+    { "git-receive-pack ", git_receive_pack },
+    { "git-upload-pack ", git_upload_pack },
+    { 0 }
 };
 
 int main (int argc, char **argv)
@@ -109,8 +103,9 @@ int main (int argc, char **argv)
 	verbose = 1;
     if (!line)
 	return 1;
-    for (i = 0; commands[i]; i++)
-	if ((*commands[i]) (line) != 0)
-	    break;
+    for (i = 0; commands[i].name; i++)
+	if (! strncmp (line, commands[i].name, strlen (commands[i].name)))
+	    if ((*commands[i].command) (line) != 0)
+		break;
     return 1;
 }
