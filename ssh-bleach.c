@@ -1,7 +1,7 @@
 /*
     ssh-bleach - sanitize an ssh command line
 
-    Copyright © 2006  Keith Packard and Carl Worth
+    Copyright © 2006  Keith Packard, Carl Worth and Daniel Stone
 
     This program is free software; you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
