@@ -23,8 +23,12 @@
 #include <unistd.h>
 #include <stdarg.h>
 #include <errno.h>
+#include <sys/types.h>
+#include <pwd.h>
 
 int verbose = 0;
+
+void panic (char *fmt, ...) __attribute__((noreturn));
 
 void panic (char *fmt, ...)
 {
@@ -103,6 +107,82 @@ int git_upload_pack (char *line) {
     panic ("exec /usr/local/bin/git-receive-pack failed: \"%s\"\n", strerror (errno));
 }
 
+/* watch you don't overflow allowed_roots! */
+struct {
+    char *username;
+    char *allowed_roots[16];
+} annarchy_rsync_users[] = {
+    { "kemper-cvs",
+      { "/srv/anoncvs.freedesktop.org/", "/srv/anongit.freedesktop.org", NULL }
+    },
+    { NULL, { NULL } }
+};
+
+int rsync (char *line) {
+    struct passwd *passwd = NULL;
+    char *newcmd = NULL, *lastarg = NULL;
+    char **user_roots = NULL;
+    int status = 0, i = 0;
+
+    passwd = getpwuid(getuid());
+    if (!passwd)
+        panic("failed to get pwent for current user\n");
+
+    for (i = 0; annarchy_rsync_users[i].username; i++) {
+        if (strcmp(passwd->pw_name, annarchy_rsync_users[i].username) == 0) {
+            user_roots = annarchy_rsync_users[i].allowed_roots;
+            status = 1;
+	    break;
+	}
+    }
+
+    if (status == 1) {
+        newcmd = malloc((strlen(line) + strlen("/usr/bin/") + 1) *
+                        sizeof(char));
+        if (!newcmd)
+            panic("failed to allocate space for arg parsing\n");
+        sprintf(newcmd, "/usr/bin/%s", line);
+
+        if (strchr(newcmd, '`') || strchr(newcmd, '<') ||
+            strchr(newcmd, '>') || strchr(newcmd, '(') ||
+            strchr(newcmd, ')') || strstr(newcmd, ".."))
+            panic("treachery in command '%s'\n", newcmd);
+
+        lastarg = strrchr(newcmd, ' ');
+        if (!lastarg)
+            panic("missing argument to rsync ('%s')\n", newcmd);
+
+        /* elide the space */
+        lastarg++;
+
+        for (status = 0, i = 0; user_roots[i]; i++) {
+            if (strncmp(lastarg, user_roots[i],
+                        strlen(user_roots[i])) == 0) {
+                status = 1;
+                break;
+            }
+        }
+
+	if (status == 0)
+            panic("not permitted to sync to %s\n", lastarg);
+
+        if (verbose)
+            printf("rsync '%s'\n", newcmd);
+        status = system(newcmd);
+        free(newcmd);
+
+        if (status != 0)
+            panic("system /usr/bin/rsync failed: \"%s\"\n", strerror (errno));
+        else
+            exit(0);
+    }
+    else {
+        if (verbose)
+            printf("user %s not authorised to rsync\n", passwd->pw_name);
+        return 0;
+    }
+}
+
 struct {
     char *name;
     int (*command) (char *line);
@@ -110,6 +190,7 @@ struct {
     { "cvs server", cvs_server },
     { "git-receive-pack", git_receive_pack },
     { "git-upload-pack", git_upload_pack },
+    { "rsync", rsync },
     { 0 }
 };
 
