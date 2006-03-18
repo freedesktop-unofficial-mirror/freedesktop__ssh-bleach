@@ -47,6 +47,13 @@ int cvs_server (char *line) {
     panic ("exec /usr/bin/cvs failed: \"%s\"\n", strerror (errno));
 }
 
+int svn_server (char *line) {
+    if (verbose)
+        printf ("svn -t\n");
+    (void) execl ("/usr/bin/svn", "-t", NULL);
+    panic ("exec /usr/bin/svn failed: \"%s\"\n", strerror (errno));
+}
+
 const char bad_chars[] = "\"$%'*;<>?[\\]`|";
 
 char *get_quoted_arg (char *line)
@@ -188,6 +195,7 @@ struct {
     int (*command) (char *line);
 } commands[] = {
     { "cvs server", cvs_server },
+    { "svn -t", svn_server },
     { "git-receive-pack", git_receive_pack },
     { "git-upload-pack", git_upload_pack },
     { "rsync", rsync },
