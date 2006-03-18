@@ -113,7 +113,7 @@ struct {
     char *allowed_roots[16];
 } annarchy_rsync_users[] = {
     { "kemper-cvs",
-      { "/srv/anoncvs.freedesktop.org/", "/srv/anongit.freedesktop.org", NULL }
+      { "/srv/anoncvs.freedesktop.org/", "/srv/anongit.freedesktop.org", "/srv/anonsvn.freedesktop.org", NULL }
     },
     { NULL, { NULL } }
 };
