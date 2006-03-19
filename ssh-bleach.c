@@ -50,7 +50,7 @@ int cvs_server (char *line) {
 int svn_server (char *line) {
     if (verbose)
         printf ("svnserve -t\n");
-    (void) execl ("/usr/bin/svnserve", "-t", NULL);
+    (void) execl ("/usr/bin/svnserve", "svnserve", "-t", NULL);
     panic ("exec /usr/bin/svnserve failed: \"%s\"\n", strerror (errno));
 }
 
